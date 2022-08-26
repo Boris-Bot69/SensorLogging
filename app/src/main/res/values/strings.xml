@@ -1,3 +1,16 @@
 <resources>
-    <string name="app_name">Sensor_2.0</string>
+    <string name="app_name">SensorLogging</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string-array name="Sensoren">
+        <item>Gravity</item>
+        <item>Acceleration</item>
+        <item>Gyroscope</item>
+        <item>Location</item>
+    </string-array>
+    <string-array name="description">
+        <item>Linear Acceleration</item>
+        <item>Gravity Vector</item>
+        <item>Device Orientation</item>
+        <item>Longitude and Latitude</item>
+    </string-array>
 </resources>

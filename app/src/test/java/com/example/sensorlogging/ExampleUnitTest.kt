@@ -1,4 +1,4 @@
-package com.example.sensor_20
+package com.example.sensorlogging
 
 import org.junit.Test
 

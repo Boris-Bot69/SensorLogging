@@ -1,29 +1,50 @@
-package com.example.sensor_20
+package com.example.sensorlogging
+import android.hardware.Sensor
+import android.hardware.SensorManager
 
+import android.os.Bundle
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
 
 import android.content.Context
-import android.hardware.Sensor
+
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
-import android.hardware.SensorManager
-import android.os.Bundle
+
 import android.util.Log
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat.getSystemService
+import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStreamWriter
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
 
-
 private val TAG = MainActivity::class.simpleName
+private const val FILENAME = "logging.csv"
+
+const val LOCATION = 123
 
 
-class MainActivity : AppCompatActivity(), SensorEventListener{
-    //--------------------------Sensor-----------------------------------------------------------------------------
-    //View
+// TODO: Rename parameter arguments, choose names that match
+// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+private const val ARG_PARAM1 = "param1"
+private const val ARG_PARAM2 = "param2"
+
+/**
+ * A simple [Fragment] subclass.
+ * Use the [Sensor.newInstance] factory method to
+ * create an instance of this fragment.
+ */
+
+
+class Sensor : Fragment(), SensorEventListener {
+    // TODO: Rename and change types of parameters
     private var tvGravity: ArrayList<TextView> = ArrayList()
     private var tvAcceleration: ArrayList<TextView> = ArrayList()
     private var tvGyro: ArrayList<TextView> = ArrayList()
@@ -61,51 +82,43 @@ class MainActivity : AppCompatActivity(), SensorEventListener{
     private var timeAcceleration: Long = 0
     private var timeGyro: Long = 0
 
-    //View IDs
+
+    private var param1: String? = null
+
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        initViews()
-        initSensors()
-
-    }
-  
-
-
-    private fun initSensors(){
-        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        if (sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) != null) {
-            sensorGravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
-        }
-        if (sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) != null) {
-            sensorAcceleration = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
-        }
-        if (sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null) {
-            sensorGyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+        arguments?.let {
+            param1 = it.getString(ARG_PARAM1)
+     //       param2 = it.getString(ARG_PARAM2)
         }
     }
-    private fun initViews() {
-        
-        // initiate sensor
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
+
+
+        //  initView() --------------------------------------------------------------------------------------
+        var view = inflater.inflate(R.layout.fragment_sensor, container, false)
         for (i in idGravity) {
-            tvGravity.add(findViewById(i))
+            tvGravity.add(view.findViewById(i))
         }
 
         for (i in idAcceleration) {
-            tvAcceleration.add(findViewById(i))
+            tvAcceleration.add(view.findViewById(i))
         }
         for (i in idGyro) {
-            tvGyro.add(findViewById(i))
+            tvGyro.add(view.findViewById(i))
         }
-        
-        //initiate location
 
 
-        btnStart = findViewById(R.id.btn_start)
-        btnStop = findViewById(R.id.btn_stop)
+        btnStart = view.findViewById(R.id.btn_start)
+        btnStop = view.findViewById(R.id.btn_stop)
 
 
         btnStart.setOnClickListener {
@@ -119,7 +132,28 @@ class MainActivity : AppCompatActivity(), SensorEventListener{
             btnStart.isEnabled = true
             btnStop.isEnabled = false
         }
+        // init Sensor
+
+
+            sensorManager = requireActivity().getSystemService(Context.SENSOR_SERVICE) as SensorManager
+            if (sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) != null) {
+                sensorGravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+            }
+            if (sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) != null) {
+                sensorAcceleration = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
+            }
+            if (sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null) {
+                sensorGyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+            }
+
+
+
+        return view
+
+
+
     }
+
 
 
     private fun registerListener() {
@@ -153,18 +187,18 @@ class MainActivity : AppCompatActivity(), SensorEventListener{
     override fun onSensorChanged(event: SensorEvent?) {
 
         if (event!!.sensor.type == Sensor.TYPE_GRAVITY) {
-                Log.d("Gravity", "Grav_X:" + event.values[0] + "Grav_Y:" + event.values[1] + "Grav_Z:" + event.values[2])
+            Log.d("Gravity", "Grav_X:" + event.values[0] + "Grav_Y:" + event.values[1] + "Grav_Z:" + event.values[2])
 
             getGravityData(event)
         }
         if (event.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
-                Log.d("Accelerometer", "Acc_X:" + event.values[0] + "Acc_Y:" + event.values[1] + "Acc_Z:" + event.values[2])
+            Log.d("Accelerometer", "Acc_X:" + event.values[0] + "Acc_Y:" + event.values[1] + "Acc_Z:" + event.values[2])
 
             getAccelerationData(event)
         }
         if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
-                Log.d("Gyroscope", "Gyro_X:" + event.values[0] + "Gyro_Y:" + event.values[1] + "Gyro_Z:" + event.values[2])
-                getGyroData(event)
+            Log.d("Gyroscope", "Gyro_X:" + event.values[0] + "Gyro_Y:" + event.values[1] + "Gyro_Z:" + event.values[2])
+            getGyroData(event)
         }
 
 
@@ -191,26 +225,32 @@ class MainActivity : AppCompatActivity(), SensorEventListener{
             tvGravity[2].text = "x3: ${"%.2f".format(gravityData!!.x3)} m/s^2"
             timeGravity = System.currentTimeMillis()
 
-            saveGravity(DateTimeFormatter.ISO_INSTANT.format(Instant.now()) +
-                    "   Gravity_x: ${"%.2f".format(gravityData!!.x1)} m/s^2" + " Gravity_y: ${"%.2f".format(gravityData!!.x2)} m/s^2"+ " Gravity_z: ${"%.2f".format(gravityData!!.x2)} m/s^2 \n")
+           saveGravity(DateTimeFormatter.ISO_INSTANT.format(Instant.now()) +
+                   "   Gravity_x: ${"%.2f".format(gravityData!!.x1)} m/s^2" + " Gravity_y: ${"%.2f".format(gravityData!!.x2)} m/s^2"+ " Gravity_z: ${"%.2f".format(gravityData!!.x2)} m/s^2 \n")
         }
     }
 
     private fun saveGravity(s: String) {
+
+            // You can find the file in /data/user/0/com.example.sensorlogging/files/Logging.csv
+
         try {
-            // You can find the file in /data/user/0/com.example.sensor_20/files/Logging.csv
-            openFileOutput("Logging_Gravity.csv" , Context.MODE_APPEND).use {
-                    fos -> OutputStreamWriter(fos).use {
-                    osw -> osw.write(s)
-                    }
+            var stream: FileOutputStream =
+                requireActivity().openFileOutput("Logging_Gravity.csv", Context.MODE_APPEND)
+            stream.use { fos ->
+                OutputStreamWriter(fos).use { osw -> osw.write(s) }
             }
-
-        } catch (ex: IOException) {
-            Log.e(TAG, "filesDirectory: ${filesDir.absolutePath}")
-
         }
 
+        catch (ex: IOException) {
+            Log.e(TAG, "filesDirectory: ${requireActivity().filesDir.absolutePath}")
+
+            }
+
     }
+
+
+
 
 
     private fun getAccelerationData(e: SensorEvent?) {
@@ -237,21 +277,29 @@ class MainActivity : AppCompatActivity(), SensorEventListener{
 
     }
 
+
+
     private fun saveAcceleration(s: String) {
         try {
             // You can find the file in /data/user/0/com.example.sensor_20/files/Logging.csv
-            openFileOutput("Logging_Acceleration.csv" , Context.MODE_APPEND).use {
-                    fos -> OutputStreamWriter(fos).use {
-                    osw -> osw.write(s)
-            }
-            }
+            var stream: FileOutputStream =
+                requireActivity().openFileOutput("Logging_Acceleration.csv", Context.MODE_APPEND)
+            stream.use { fos ->
+                OutputStreamWriter(fos).use { osw ->
+                    osw.write(s)
 
-        } catch (ex: IOException) {
-            Log.e(TAG, "filesDirectory: ${filesDir.absolutePath}")
+                }
+            }
+        }
+            catch (ex: IOException) {
+            Log.e(TAG, "filesDirectory: ${requireActivity().filesDir.absolutePath}")
 
         }
 
     }
+
+
+
 
     private fun getGyroData(e: SensorEvent?) {
         if(gyroData == null) {
@@ -276,7 +324,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener{
 
                 saveGyro(DateTimeFormatter.ISO_INSTANT.format(Instant.now())
                         +
-                    "   x1: ${"%.2f".format(gyroData!!.x1 * (180.0 / Math.PI))} °/s \t\t gyroX: ${"%.2f".format(gyroX * (180.0 / Math.PI))} °" +
+                        "   x1: ${"%.2f".format(gyroData!!.x1 * (180.0 / Math.PI))} °/s \t\t gyroX: ${"%.2f".format(gyroX * (180.0 / Math.PI))} °" +
                         "x2: ${"%.2f".format(gyroData!!.x1 * (180.0 / Math.PI))} °/s \t\t gyroY: ${"%.2f".format(gyroY * (180.0 / Math.PI))} °" +
                         "x3: ${"%.2f".format(gyroData!!.x1 * (180.0 / Math.PI))} °/s \t\t gyroZ: ${"%.2f".format(gyroX * (180.0 / Math.PI))} °\n")
 
@@ -285,21 +333,50 @@ class MainActivity : AppCompatActivity(), SensorEventListener{
         }
     }
 
+
+
     private fun saveGyro(s: String) {
         try {
-            // You can find the file in /data/user/0/com.example.sensor_20/files/Logging.csv
-            openFileOutput("Logging_Gyro.csv" , Context.MODE_APPEND).use {
-                    fos -> OutputStreamWriter(fos).use {
-                    osw -> osw.write(s)
-            }
-            }
+            var stream: FileOutputStream =
+                requireActivity().openFileOutput("Logging_Gravity.csv", Context.MODE_APPEND)
+            stream.use { fos ->
+                OutputStreamWriter(fos).use { osw ->
+                    osw.write(s)
 
-        } catch (ex: IOException) {
-            Log.e(TAG, "filesDirectory: ${filesDir.absolutePath}")
+                }
+            }
+        }
+        catch (ex: IOException) {
+            Log.e(TAG, "filesDirectory: ${requireActivity().filesDir.absolutePath}")
 
         }
 
     }
+
+
+
+
+
+    companion object {
+        /**
+         * Use this factory method to create a new instance of
+         * this fragment using the provided parameters.
+         *
+         * @param param1 Parameter 1.
+         * @param param2 Parameter 2.
+         * @return A new instance of fragment Recording.
+         */
+        // TODO: Rename and change types and number of parameters
+        @JvmStatic
+        fun newInstance(param1: String, param2: String) =
+            Recording().apply {
+                arguments = Bundle().apply {
+                    putString(ARG_PARAM1, param1)
+                    putString(ARG_PARAM2, param2)
+                }
+            }
+    }
+
 
 
 }
