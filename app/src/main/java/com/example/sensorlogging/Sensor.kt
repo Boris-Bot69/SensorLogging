@@ -62,18 +62,6 @@ class Sensor : Fragment(), SensorEventListener, LocationListener{
     private lateinit var tvlongitude : TextView
 
     private lateinit var manager: LocationManager
-    private lateinit var provider: String
-
-    private lateinit var looper: Looper
-
-
-
-
-
-
-    // Communicator to pass data from Sensor to Recoding ------------
-
-
     private var stringpath: ArrayList<String> = ArrayList()
 
     //--------------
@@ -173,7 +161,9 @@ class Sensor : Fragment(), SensorEventListener, LocationListener{
         switchgyro = view.findViewById(R.id.gyro_switch)
         switchlocation = view.findViewById(R.id.location_switch)
 
-
+        btnStart.isEnabled = true
+        btnStop.isEnabled = false
+        btnReset.isEnabled = false
 
        btnStart.setOnClickListener {
             registerListener() // Sensor
@@ -182,6 +172,7 @@ class Sensor : Fragment(), SensorEventListener, LocationListener{
             }
             btnStart.isEnabled = false
             btnStop.isEnabled = true
+            btnReset.isEnabled = false
         }
 
 
@@ -190,9 +181,11 @@ class Sensor : Fragment(), SensorEventListener, LocationListener{
             unregisterListener()
             if (switchlocation.isChecked) {
                 manager.removeUpdates(this)
+
             }
             btnStart.isEnabled = true
             btnStop.isEnabled = false
+            btnReset.isEnabled = true
 
             switchgrav.isActivated = false
             switchacce.isActivated = false
@@ -205,6 +198,29 @@ class Sensor : Fragment(), SensorEventListener, LocationListener{
             gyroX = 0f
             gyroY = 0f
             gyroZ = 0f
+
+            if (switchgrav.isChecked) {
+
+                tvGravity[0].text = "X: 0.00 m/s^2"
+                tvGravity[1].text = "Y: 0.00 m/s^2"
+                tvGravity[2].text = "Z: 0.00 m/s^2"
+            }
+
+            if (switchacce.isChecked) {
+                tvAcceleration[0].text = "X: 0.00 m/s^2"
+                tvAcceleration[1].text = "Y: 0.00 m/s^2"
+                tvAcceleration[2].text = "Z: 0.00 m/s^2"
+            }
+            if (switchgyro.isChecked) {
+                tvGyro[0].text = "X: 0.00 m/s^2"
+                tvGyro[1].text = "Y: 0.00 m/s^2"
+                tvGyro[2].text = "Z: 0.00 m/s^2"
+            }
+
+            if (switchlocation.isChecked) {
+                tvlatitude.text = "latitude: 0.00°"
+                tvlongitude.text = "longitude: 0.00°"
+            }
 
         }
 
@@ -238,8 +254,8 @@ class Sensor : Fragment(), SensorEventListener, LocationListener{
 
 
     override fun onLocationChanged(location: Location) {
-        tvlatitude.text = "latitude: " + location.latitude.toString()
-        tvlongitude.text = "longitude: " + location.longitude.toString()
+        tvlatitude.text = "latitude: " + "${"%.6f".format(location.latitude)}°"
+        tvlongitude.text = "longitude: " + "${"%.6f".format(location.longitude)}°"
         saveLocation(DateTimeFormatter.ISO_INSTANT.format(Instant.now()) +
                 "   latitude: ${"%.2f".format(location.latitude)}°" + "  longitude: ${"%.2f".format(location.longitude)}° \n")
 
