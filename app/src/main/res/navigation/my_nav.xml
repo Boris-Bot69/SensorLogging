@@ -9,7 +9,9 @@
         android:id="@+id/sensor"
         android:name="com.example.sensorlogging.Sensor"
         android:label="Sensor"
-        tools:layout="@layout/fragment_sensor" />
+        tools:layout="@layout/fragment_sensor" >
+
+    </fragment>
     <fragment
         android:id="@+id/recording"
         android:name="com.example.sensorlogging.Recording"

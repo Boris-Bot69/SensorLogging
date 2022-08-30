@@ -13,16 +13,23 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+
+
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
         val navController = findNavController(R.id.fragment)
 
         bottomNavigationView.setupWithNavController(navController)
+        bottomNavigationView.getOrCreateBadge(R.id.recording).apply {
+            number = 10
+            isVisible = true
+        }
 
         val appBarConfiguration = AppBarConfiguration(setOf(R.id.sensor, R.id.recording, R.id.info2))
         setupActionBarWithNavController(navController, appBarConfiguration)
 
+        //transfer data from Sensor to Recording
+
+         }
 
 
-
-    }
 }

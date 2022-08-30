@@ -1,4 +1,6 @@
 package com.example.sensorlogging
+import android.Manifest
+import android.annotation.SuppressLint
 import android.hardware.Sensor
 import android.hardware.SensorManager
 
@@ -7,6 +9,8 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 
 import android.content.Context
+import android.content.pm.PackageManager
+
 
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -15,20 +19,27 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+
+import android.widget.Switch
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat.getSystemService
+
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStreamWriter
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
+import android.os.Looper
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 
 private val TAG = MainActivity::class.simpleName
 private const val FILENAME = "logging.csv"
 
-const val LOCATION = 123
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -43,8 +54,34 @@ private const val ARG_PARAM2 = "param2"
  */
 
 
-class Sensor : Fragment(), SensorEventListener {
-    // TODO: Rename and change types of parameters
+private val LOCATION = 123
+
+class Sensor : Fragment(), SensorEventListener, LocationListener{
+
+    private lateinit var tvlatitude: TextView
+    private lateinit var tvlongitude : TextView
+
+    private lateinit var manager: LocationManager
+    private lateinit var provider: String
+
+    private lateinit var looper: Looper
+
+
+
+
+
+
+    // Communicator to pass data from Sensor to Recoding ------------
+
+
+    private var stringpath: ArrayList<String> = ArrayList()
+
+    //--------------
+
+
+
+
+
     private var tvGravity: ArrayList<TextView> = ArrayList()
     private var tvAcceleration: ArrayList<TextView> = ArrayList()
     private var tvGyro: ArrayList<TextView> = ArrayList()
@@ -56,6 +93,13 @@ class Sensor : Fragment(), SensorEventListener {
     //Button
     private lateinit var btnStart: Button
     private lateinit var btnStop: Button
+    private lateinit var btnReset: Button
+
+    private lateinit var switchgrav: Switch
+    private lateinit var switchacce: Switch
+    private lateinit var switchgyro: Switch
+    private lateinit var switchlocation: Switch
+
 
     //Sensor
 
@@ -63,7 +107,6 @@ class Sensor : Fragment(), SensorEventListener {
     private var sensorGravity: Sensor? = null
     private var sensorAcceleration: Sensor? = null
     private var sensorGyro: Sensor? = null
-
     //SensorData
     private var gravityData: SensorData? = null
     private var accelerationData: SensorData? = null
@@ -82,7 +125,6 @@ class Sensor : Fragment(), SensorEventListener {
     private var timeAcceleration: Long = 0
     private var timeGyro: Long = 0
 
-
     private var param1: String? = null
 
 
@@ -95,7 +137,7 @@ class Sensor : Fragment(), SensorEventListener {
      //       param2 = it.getString(ARG_PARAM2)
         }
     }
-
+    @SuppressLint("MissingPermission")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -105,6 +147,8 @@ class Sensor : Fragment(), SensorEventListener {
 
         //  initView() --------------------------------------------------------------------------------------
         var view = inflater.inflate(R.layout.fragment_sensor, container, false)
+
+
         for (i in idGravity) {
             tvGravity.add(view.findViewById(i))
         }
@@ -116,66 +160,144 @@ class Sensor : Fragment(), SensorEventListener {
             tvGyro.add(view.findViewById(i))
         }
 
+        tvlatitude = view.findViewById(R.id.latitude)
+        tvlongitude = view.findViewById(R.id.longitude)
+
 
         btnStart = view.findViewById(R.id.btn_start)
         btnStop = view.findViewById(R.id.btn_stop)
+        btnReset = view.findViewById(R.id.btnReset)
+
+        switchgrav = view.findViewById(R.id.gravity_switch)
+        switchacce = view.findViewById(R.id.acceleration_switch)
+        switchgyro = view.findViewById(R.id.gyro_switch)
+        switchlocation = view.findViewById(R.id.location_switch)
 
 
-        btnStart.setOnClickListener {
+
+       btnStart.setOnClickListener {
             registerListener() // Sensor
+             if (switchlocation.isChecked) {
+                 getLocation()
+            }
             btnStart.isEnabled = false
             btnStop.isEnabled = true
         }
+
+
         btnStop.setOnClickListener {
             Log.d("Sensors", "Stop button Pressed")
             unregisterListener()
+            if (switchlocation.isChecked) {
+                manager.removeUpdates(this)
+            }
             btnStart.isEnabled = true
             btnStop.isEnabled = false
+
+            switchgrav.isActivated = false
+            switchacce.isActivated = false
+            switchgyro.isActivated = false
+            //TODO store the files into the fragment_recording
+
         }
+
+        btnReset.setOnClickListener {
+            gyroX = 0f
+            gyroY = 0f
+            gyroZ = 0f
+
+        }
+
         // init Sensor
 
 
             sensorManager = requireActivity().getSystemService(Context.SENSOR_SERVICE) as SensorManager
-            if (sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) != null) {
+            if (sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) != null ) {
                 sensorGravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
             }
-            if (sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) != null) {
+            if (sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) != null ) {
                 sensorAcceleration = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
             }
-            if (sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null) {
+            if (sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null ) {
                 sensorGyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
             }
-
-
-
-        return view
+       return view
 
 
 
     }
 
+    private fun getLocation() {
+        manager = requireActivity().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        if ((ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 123)
+        }
+        manager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 5f, this)
+
+    }
 
 
-    private fun registerListener() {
+    override fun onLocationChanged(location: Location) {
+        tvlatitude.text = "latitude: " + location.latitude.toString()
+        tvlongitude.text = "longitude: " + location.longitude.toString()
+        saveLocation(DateTimeFormatter.ISO_INSTANT.format(Instant.now()) +
+                "   latitude: ${"%.2f".format(location.latitude)}°" + "  longitude: ${"%.2f".format(location.longitude)}° \n")
 
-        if (sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) != null) {
+
+
+
+    }
+
+    private fun saveLocation(s: String) {
+        try {
+            var stream: FileOutputStream =
+                requireActivity().openFileOutput("Logging_Location.csv", Context.MODE_APPEND)
+            stream.use { fos ->
+                OutputStreamWriter(fos).use { osw ->
+                    osw.write(s)
+
+                }
+            }
+        }
+        catch (ex: IOException) {
+            Log.e(TAG, "filesDirectory: ${requireActivity().filesDir.absolutePath}")
+
+        }
+
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 123) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(requireContext(), "Permission Granted", Toast.LENGTH_SHORT).show()
+            }
+            else {
+                Toast.makeText(requireContext(), "Permission Denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+private fun registerListener() {
+
+        if (sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) != null && switchgrav.isChecked) {
             Log.d(TAG, "registerGravity: on")
             sensorManager.registerListener(this, sensorGravity, SensorManager.SENSOR_DELAY_NORMAL)
             Log.d(TAG, "registerGravity: successful")
-
         }
-        if (sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) != null) {
+        if (sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) != null && switchacce.isChecked) {
             Log.d(TAG, "registerAcceleration: on")
             sensorManager.registerListener(this, sensorAcceleration, SensorManager.SENSOR_DELAY_NORMAL)
             Log.d(TAG, "registerAcceleration: successful")
-
         }
-        if (sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null) {
+        if (sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null && switchgyro.isChecked) {
             Log.d(TAG, "registerGyroscope: on")
             sensorManager.registerListener(this, sensorGyro, SensorManager.SENSOR_DELAY_NORMAL)
             Log.d(TAG, "registerGyroscope: successful")
-
         }
+
+
+
 
     }
     private fun unregisterListener() {
@@ -220,9 +342,9 @@ class Sensor : Fragment(), SensorEventListener {
         }
 
         if (System.currentTimeMillis() - timeGravity >= dt) {
-            tvGravity[0].text = "x1: ${"%.2f".format(gravityData!!.x1)} m/s^2"
-            tvGravity[1].text = "x2: ${"%.2f".format(gravityData!!.x2)} m/s^2"
-            tvGravity[2].text = "x3: ${"%.2f".format(gravityData!!.x3)} m/s^2"
+            tvGravity[0].text = "X: ${"%.2f".format(gravityData!!.x1)} m/s^2"
+            tvGravity[1].text = "Y: ${"%.2f".format(gravityData!!.x2)} m/s^2"
+            tvGravity[2].text = "Z: ${"%.2f".format(gravityData!!.x3)} m/s^2"
             timeGravity = System.currentTimeMillis()
 
            saveGravity(DateTimeFormatter.ISO_INSTANT.format(Instant.now()) +
@@ -264,9 +386,9 @@ class Sensor : Fragment(), SensorEventListener {
 
         }
         if (System.currentTimeMillis() - timeAcceleration >= dt) {
-            tvAcceleration[0].text = "x1: ${"%.2f".format(accelerationData!!.x1)} m/s^2"
-            tvAcceleration[1].text = "x2: ${"%.2f".format(accelerationData!!.x2)} m/s^2"
-            tvAcceleration[2].text = "x3: ${"%.2f".format(accelerationData!!.x3)} m/s^2"
+            tvAcceleration[0].text = "X: ${"%.2f".format(accelerationData!!.x1)} m/s^2"
+            tvAcceleration[1].text = "Y: ${"%.2f".format(accelerationData!!.x2)} m/s^2"
+            tvAcceleration[2].text = "Z: ${"%.2f".format(accelerationData!!.x3)} m/s^2"
             timeAcceleration = System.currentTimeMillis()
 
 
@@ -281,7 +403,6 @@ class Sensor : Fragment(), SensorEventListener {
 
     private fun saveAcceleration(s: String) {
         try {
-            // You can find the file in /data/user/0/com.example.sensor_20/files/Logging.csv
             var stream: FileOutputStream =
                 requireActivity().openFileOutput("Logging_Acceleration.csv", Context.MODE_APPEND)
             stream.use { fos ->
@@ -317,9 +438,9 @@ class Sensor : Fragment(), SensorEventListener {
 
             if (System.currentTimeMillis() - timeGyro >= dt) {
 
-                tvGyro[0].text = "x1: ${"%.2f".format(gyroData!!.x1*(180.0/Math.PI))} °/s \t\t gyroX: ${"%.2f".format(gyroX*(180.0/Math.PI))} °"
-                tvGyro[1].text = "x2: ${"%.2f".format(gyroData!!.x2*(180.0/Math.PI))} °/s \t\t gyroY: ${"%.2f".format(gyroY*(180.0/Math.PI))} °"
-                tvGyro[2].text = "x3: ${"%.2f".format(gyroData!!.x3*(180.0/Math.PI))} °/s \t\t gyroZ: ${"%.2f".format(gyroZ*(180.0/Math.PI))} °"
+                tvGyro[0].text = "X: ${"%.2f".format(gyroData!!.x1*(180.0/Math.PI))} °/s \t\t gyroX: ${"%.2f".format(gyroX*(180.0/Math.PI))} °"
+                tvGyro[1].text = "Y: ${"%.2f".format(gyroData!!.x2*(180.0/Math.PI))} °/s \t\t gyroY: ${"%.2f".format(gyroY*(180.0/Math.PI))} °"
+                tvGyro[2].text = "Z: ${"%.2f".format(gyroData!!.x3*(180.0/Math.PI))} °/s \t\t gyroZ: ${"%.2f".format(gyroZ*(180.0/Math.PI))} °"
                 timeGyro = System.currentTimeMillis()
 
                 saveGyro(DateTimeFormatter.ISO_INSTANT.format(Instant.now())
@@ -338,7 +459,7 @@ class Sensor : Fragment(), SensorEventListener {
     private fun saveGyro(s: String) {
         try {
             var stream: FileOutputStream =
-                requireActivity().openFileOutput("Logging_Gravity.csv", Context.MODE_APPEND)
+                requireActivity().openFileOutput("Logging_Gyro.csv", Context.MODE_APPEND)
             stream.use { fos ->
                 OutputStreamWriter(fos).use { osw ->
                     osw.write(s)
@@ -366,6 +487,8 @@ class Sensor : Fragment(), SensorEventListener {
          * @param param2 Parameter 2.
          * @return A new instance of fragment Recording.
          */
+
+        const val PERMISSION_LOCATION_REQUEST_CODE = 1
         // TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
