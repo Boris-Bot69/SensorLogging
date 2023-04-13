@@ -1,16 +1,8 @@
 <resources>
-    <string name="app_name">SensorLogging</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string-array name="Sensoren">
-        <item>Gravity</item>
-        <item>Acceleration</item>
-        <item>Gyroscope</item>
-        <item>Location</item>
-    </string-array>
-    <string-array name="description">
-        <item>Linear Acceleration</item>
-        <item>Gravity Vector</item>
-        <item>Device Orientation</item>
-        <item>Longitude and Latitude</item>
-    </string-array>
+    <string name="app_name">SensorLogger</string>
+
+    <string name="first_coordinate">X: 0.00 m/s^2</string>
+    <string name="second_coordinate">Y: 0.00 m/s^2</string>
+    <string name="third_coordinate">Z: 0.00 m/s^2</string>
+
 </resources>

@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <item android:title="Sensor" android:icon="@drawable/ic_baseline_sensor_door_24" android:id="@+id/sensor"/>
-    <item android:title="Recording" android:icon="@drawable/ic_baseline_fiber_manual_record_24" android:id="@+id/recording"/>
-    <item android:title="Info" android:icon="@drawable/ic_baseline_info_24" android:id="@+id/info2"/>
-</menu>
