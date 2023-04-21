@@ -34,6 +34,7 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
+
 class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener {
 
     private lateinit var summaryViewModel: SummaryViewModel
@@ -69,7 +70,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
     private lateinit var switchgyro: Switch
     private lateinit var switchlocation: Switch
 
-
     //Sensor
     private lateinit var sensorManager: SensorManager
     private var sensorGravity: Sensor? = null
@@ -88,11 +88,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
 
     //timedifference between two recieved Sensordata in Milliseconds
     private var dt: Long = 1000
-
     private var timeGravity: Long = 0
     private var timeAcceleration: Long = 0
     private var timeGyro: Long = 0
-
 
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -101,7 +99,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
         summaryViewModel = ViewModelProvider(this)[SummaryViewModel::class.java]
 
         initView()
-
 
     }
 
@@ -146,8 +143,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
 
 
         btnStart.setOnClickListener {
-
-
 
             if (switchgrav.isChecked || switchacce.isChecked || switchgyro.isChecked || switchlocation.isChecked) {
                 registerListener() // register Sensor
@@ -219,17 +214,27 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
 
         }
 
-        btnExport.setOnClickListener {
+        btnExport.isEnabled = false
 
-            exportDataToCSVFile()
-        }
-
-        btnDownload.setOnClickListener {
-
-
-        }
+        btnDownload.isEnabled = false
 
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+
+        //create Sensor Direct Channel
+
+        /*
+        lateinit var memoryFile: MemoryFile
+        lateinit var channel: SensorDirectChannel
+
+        try {
+            memoryFile = MemoryFile("AccmemoryFile", 1040)
+
+        }
+        catch (e: java.lang.Exception) {
+            e.printStackTrace()
+        }
+        channel = sensorManager.createDirectChannel(memoryFile)
+        */
         if (sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) != null) {
             sensorGravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
         }
@@ -239,24 +244,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
         if (sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null) {
             sensorGyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
         }
-
-
-
-
     }
 
-    private fun downloadDataToCSVFile() {
-        TODO("Not yet implemented")
-
-
-    }
-
-    private fun exportDataToCSVFile() {
-        
-        var x = summaryViewModel.readAllSummary()
-
-
-    }
 
 
 
@@ -438,9 +427,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
     private fun getGyroData(e: SensorEvent?) {
         if (gyroData == null) {
             gyroData = SensorData(e!!.values[0], e!!.values[1], e!!.values[2], e!!.timestamp)
-            timeGyro = System.currentTimeMillis()
         } else {
-            var time = (System.currentTimeMillis() - timeGyro) / 1000f // Time-Difference in s
             gyroData!!.x1 = e!!.values[0]
             gyroData!!.x2 = e!!.values[1]
             gyroData!!.x3 = e!!.values[2]
@@ -449,22 +436,21 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
             if (System.currentTimeMillis() - timeGyro >= dt) {
 
                 tvGyro[0].text =
-                    "X: ${"%.2f".format(gyroData!!.x1 * (180.0 / Math.PI))} °/s} °"
+                    "X: ${"%.2f".format(gyroData!!.x1)}°/s"
                 tvGyro[1].text =
-                    "Y: ${"%.2f".format(gyroData!!.x2 * (180.0 / Math.PI))} °/s} °"
+                    "Y: ${"%.2f".format(gyroData!!.x2)} °/s"
                 tvGyro[2].text =
-                    "Z: ${"%.2f".format(gyroData!!.x3 * (180.0 / Math.PI))} °/s} °"
+                    "Z: ${"%.2f".format(gyroData!!.x3)} °/s"
 
-
-
+                timeGyro = System.currentTimeMillis()
                 val gyroscope = Summary(0,DateTimeFormatter
                     .ofPattern("yyyy-MM-dd HH:mm:ss")
                     .withZone(ZoneOffset.UTC)
                     .format(Instant.now()),null,null,
                     Gyroscope(
-                        0,"${"%.2f".format(gyroData!!.x1 * (180.0 / Math.PI))} °/s",
-                        "${"%.2f".format(gyroData!!.x1 * (180.0 / Math.PI))} °/s",
-                        "${"%.2f".format(gyroData!!.x1 * (180.0 / Math.PI))} °/s"), null)
+                        0,"${"%.2f".format(gyroData!!.x1)} °/s",
+                        "${"%.2f".format(gyroData!!.x2)} °/s",
+                        "${"%.2f".format(gyroData!!.x3)} °/s"), null)
 
                 summaryViewModel.addGyroscope(gyroscope)
 
