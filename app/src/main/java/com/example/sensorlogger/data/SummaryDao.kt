@@ -10,7 +10,7 @@ import com.example.sensorlogger.model.*
 @Dao
 interface SummaryDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addGravity(gravity: Summary)
 
     @Query("DELETE FROM gravity_data")
@@ -19,7 +19,7 @@ interface SummaryDao {
     @Query("SELECT * FROM gravity_data")
     fun readAllGravity(): LiveData<List<Gravity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addAcceleration(acceleration: Summary)
 
     @Query("DELETE FROM acceleration_data")
@@ -28,7 +28,7 @@ interface SummaryDao {
     @Query("SELECT * FROM acceleration_data")
     fun readAllAcceleration(): LiveData<List<Acceleration>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addGyroscope(gyroscope: Summary)
 
     @Query ("DELETE FROM gyroscope_data")
@@ -37,7 +37,7 @@ interface SummaryDao {
     @Query("SELECT * FROM gyroscope_data")
     fun readAllGyroscope(): LiveData<List<Gyroscope>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addLocation(location: Summary)
 
     @Query("DELETE FROM location_data")

@@ -394,7 +394,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
             tvGravity[2].text = "Z: ${"%.2f".format(gravityData!!.x3)} m/s^2"
             timeGravity = System.currentTimeMillis()
 
-            val gravity = Summary(0, DateTimeFormatter
+            val gravity = Summary(0,DateTimeFormatter
                 .ofPattern("yyyy-MM-dd HH:mm:ss")
                 .withZone(ZoneOffset.UTC)
                 .format(Instant.now()), Gravity(
