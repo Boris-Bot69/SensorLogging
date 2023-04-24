@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
+import android.view.MenuItem
 
 import android.widget.Button
 import android.widget.Switch
@@ -92,6 +93,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
     private var timeAcceleration: Long = 0
     private var timeGyro: Long = 0
 
+
+    private var isAccelData: Boolean = false
+    private var isGyroData: Boolean = false
+    private var isGravData: Boolean = false
+
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -106,6 +112,23 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
         menuInflater.inflate(R.menu.delete_menu,menu)
         return true
     }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId){
+            R.id.del_database -> {
+             summaryViewModel.deleteGravity()
+             summaryViewModel.deleteAcceleration()
+             summaryViewModel.deleteGyroscope()
+             summaryViewModel.deleteLocation()
+             summaryViewModel.deleteSummary()
+             Toast.makeText(this, "Database cleared!", Toast.LENGTH_SHORT).show()
+                return true
+            }
+            else -> {
+                return false
+            }
+        }
+    }
+
 
 
     @SuppressLint("ResourceType")
@@ -183,10 +206,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
         }
         // Reset Button
         btnReset.setOnClickListener {
-            gyroX = 0f
-            gyroY = 0f
-            gyroZ = 0f
-
             if (switchgrav.isChecked) {
 
                 tvGravity[0].text = findViewById(R.string.first_coordinate)
@@ -209,32 +228,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
                 tvlatitude.text = "latitude:"
                 tvlongitude.text = "longitude:"
             }
-
-
-
         }
-
         btnExport.isEnabled = false
-
         btnDownload.isEnabled = false
 
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
-        //create Sensor Direct Channel
 
-        /*
-        lateinit var memoryFile: MemoryFile
-        lateinit var channel: SensorDirectChannel
-
-        try {
-            memoryFile = MemoryFile("AccmemoryFile", 1040)
-
-        }
-        catch (e: java.lang.Exception) {
-            e.printStackTrace()
-        }
-        channel = sensorManager.createDirectChannel(memoryFile)
-        */
         if (sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) != null) {
             sensorGravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
         }
@@ -334,26 +334,40 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
 
     override fun onSensorChanged(event: SensorEvent?) {
 
+
+
         if (event!!.sensor.type == Sensor.TYPE_GRAVITY) {
+            isGravData = true
+        }
+        if (event.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
+            isAccelData = true
+        }
+        if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
+            isGyroData = true
+
+        }
+
+        if ((isAccelData) && (isGyroData) && (isGravData)) {
             Log.d(
                 "Gravity",
                 "Grav_X:" + event.values[0] + "Grav_Y:" + event.values[1] + "Grav_Z:" + event.values[2]
             )
             getGravityData(event)
-        }
-        if (event.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
+
             Log.d(
                 "Accelerometer",
                 "Acc_X:" + event.values[0] + "Acc_Y:" + event.values[1] + "Acc_Z:" + event.values[2]
             )
             getAccelerationData(event)
-        }
-        if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
             Log.d(
                 "Gyroscope",
                 "Gyro_X:" + event.values[0] + "Gyro_Y:" + event.values[1] + "Gyro_Z:" + event.values[2]
             )
             getGyroData(event)
+
+            isGyroData = false
+            isAccelData = false
+            isGravData = false
         }
 
 

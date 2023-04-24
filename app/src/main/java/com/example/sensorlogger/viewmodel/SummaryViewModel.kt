@@ -82,4 +82,10 @@ class SummaryViewModel(application: Application): AndroidViewModel(application) 
         }
     }
 
+    fun deleteSummary() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteSummary()
+        }
+    }
+
 }

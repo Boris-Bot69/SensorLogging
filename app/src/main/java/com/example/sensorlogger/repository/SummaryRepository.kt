@@ -44,9 +44,15 @@ class SummaryRepository (private val summaryDao: SummaryDao){
         summaryDao.deleteAllLocation()
     }
 
-    suspend fun readAllSummary() {
+    fun readAllSummary() {
         summaryDao.readSummary()
     }
+
+    fun deleteSummary() {
+        summaryDao.deleteSummary()
+    }
+
+
 
 
 

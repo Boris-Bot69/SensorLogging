@@ -49,4 +49,6 @@ interface SummaryDao {
     @Query("SELECT * from summary")
     fun readSummary(): LiveData<List<Summary>>
 
+    @Query("DELETE FROM summary")
+    fun deleteSummary()
 }
