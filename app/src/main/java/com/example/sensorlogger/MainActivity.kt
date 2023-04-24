@@ -66,9 +66,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
     private lateinit var btnExport: Button
 
     //Switch
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
     private lateinit var switchgrav: Switch
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
     private lateinit var switchacce: Switch
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
     private lateinit var switchgyro: Switch
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
     private lateinit var switchlocation: Switch
 
     //Sensor
@@ -82,10 +86,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
     private var accelerationData: SensorData? = null
     private var gyroData: SensorData? = null
 
-    //GyroDaten:
-    private var gyroX: Float = 0f
-    private var gyroY: Float = 0f
-    private var gyroZ: Float = 0f
 
     //timedifference between two recieved Sensordata in Milliseconds
     private var dt: Long = 1000
@@ -225,8 +225,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
             }
 
             if (switchlocation.isChecked) {
-                tvlatitude.text = "latitude:"
-                tvlongitude.text = "longitude:"
+                tvlatitude.text = getString(R.string.latitude)
+                tvlongitude.text = getString(R.string.longitude)
             }
         }
         btnExport.isEnabled = false
@@ -267,18 +267,19 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
 
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onLocationChanged(location: Location) {
         tvlatitude.text = "latitude: " + "${"%.4f".format(location.latitude)}°"
         tvlongitude.text = "longitude: " + "${"%.4f".format(location.longitude)}°"
 
 
-        val location = Summary(0,DateTimeFormatter
+        val locationdata = Summary(0,DateTimeFormatter
             .ofPattern("yyyy-MM-dd HH:mm:ss")
             .withZone(ZoneOffset.UTC)
             .format(Instant.now()), null, null, null,
             com.example.sensorlogger.model.Location(0,"${"%.6f".format(location.latitude)}°",
             "${"%.6f".format(location.longitude)}°"))
-        summaryViewModel.addLocation(location)
+        summaryViewModel.addLocation(locationdata)
 
     }
 
@@ -376,15 +377,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
     override fun onAccuracyChanged(event: Sensor?, p1: Int) {
     }
 
+    @SuppressLint("SetTextI18n")
     private fun getGravityData(f: SensorEvent?) {
 
 
         if (gravityData == null) {
-            gravityData = SensorData(f!!.values[0], f!!.values[1], f!!.values[2], f!!.timestamp)
+            gravityData = SensorData(f!!.values[0], f.values[1], f.values[2], f.timestamp)
         } else {
             gravityData!!.x1 = f!!.values[0]
-            gravityData!!.x2 = f!!.values[1]
-            gravityData!!.x3 = f!!.values[2]
+            gravityData!!.x2 = f.values[1]
+            gravityData!!.x3 = f.values[2]
 
         }
 
@@ -407,14 +409,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun getAccelerationData(e: SensorEvent?) {
         if (accelerationData == null) {
             accelerationData =
-                SensorData(e!!.values[0], e!!.values[1], e!!.values[2], e!!.timestamp)
+                SensorData(e!!.values[0], e.values[1], e.values[2], e.timestamp)
         } else {
             accelerationData!!.x1 = e!!.values[0]
-            accelerationData!!.x2 = e!!.values[1]
-            accelerationData!!.x3 = e!!.values[2]
+            accelerationData!!.x2 = e.values[1]
+            accelerationData!!.x3 = e.values[2]
 
         }
         if (System.currentTimeMillis() - timeAcceleration >= dt) {
@@ -438,13 +441,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener, LocationListener 
 
     }
 
+    @SuppressLint("SetTextI18n")
     private fun getGyroData(e: SensorEvent?) {
         if (gyroData == null) {
-            gyroData = SensorData(e!!.values[0], e!!.values[1], e!!.values[2], e!!.timestamp)
+            gyroData = SensorData(e!!.values[0], e.values[1], e.values[2], e.timestamp)
         } else {
             gyroData!!.x1 = e!!.values[0]
-            gyroData!!.x2 = e!!.values[1]
-            gyroData!!.x3 = e!!.values[2]
+            gyroData!!.x2 = e.values[1]
+            gyroData!!.x3 = e.values[2]
 
 
             if (System.currentTimeMillis() - timeGyro >= dt) {

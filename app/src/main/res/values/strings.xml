@@ -4,5 +4,7 @@
     <string name="first_coordinate">X: 0.00 m/s^2</string>
     <string name="second_coordinate">Y: 0.00 m/s^2</string>
     <string name="third_coordinate">Z: 0.00 m/s^2</string>
+    <string name="latitude">latitude:</string>
+    <string name="longitude">longitude:</string>
 
 </resources>
